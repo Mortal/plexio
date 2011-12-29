@@ -36,3 +36,17 @@ int listen_command_socket() {
 
   return sfd;
 }
+
+int accept_command_client(int sfd) {
+  /* Now we can accept incoming connections one
+     at a time using accept(2) */
+
+  struct sockaddr_un peer_addr;
+  socklen_t peer_addr_size = sizeof(struct sockaddr_un);
+  int cfd = accept(sfd, (struct sockaddr *) &peer_addr,
+		   &peer_addr_size);
+  if (cfd == -1)
+    handle_error("accept");
+
+  return cfd;
+}

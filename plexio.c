@@ -1,7 +1,4 @@
 #include <unistd.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -22,15 +19,7 @@ int main() {
 
   int sfd = listen_command_socket();
 
-  /* Now we can accept incoming connections one
-     at a time using accept(2) */
-
-  struct sockaddr_un peer_addr;
-  socklen_t peer_addr_size = sizeof(struct sockaddr_un);
-  int cfd = accept(sfd, (struct sockaddr *) &peer_addr,
-		   &peer_addr_size);
-  if (cfd == -1)
-    handle_error("accept");
+  int cfd = accept_command_client(sfd);
 
   int eof = 0;
 
