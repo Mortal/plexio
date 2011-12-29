@@ -1,27 +1,18 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <string.h>
 #include <sys/select.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 
-#define MY_SOCK_PATH "socket"
-#define LISTEN_BACKLOG 50
+#include "plexio.h"
+#include "child.h"
 
-#define handle_error(msg) \
-  do { perror(msg); exit(EXIT_FAILURE); } while (0)
-
-int exec_child(int reader, int writer) {
-  dup2(reader, 0);
-  dup2(writer, 1);
-  dup2(writer, 2);
-  execlp("/bin/cat", "cat", NULL);
-  handle_error("exec");
+void handle_error(const char * msg) {
+  perror(msg);
+  exit(EXIT_FAILURE);
 }
-
-#define BUFSIZE (4096)
 
 int forward(int from, int to) {
   void * buf = malloc(BUFSIZE);
@@ -34,7 +25,7 @@ int forward(int from, int to) {
   return r;
 }
 
-int main(int argc, char ** argv) {
+int main() {
   pid_t child;
   int guest_in, guest_out;
   {
@@ -43,8 +34,10 @@ int main(int argc, char ** argv) {
     pipe(prog_in);
     pipe(prog_out);
     child = fork();
-    if (!child)
-      return exec_child(prog_in[0], prog_out[1]);
+    if (!child) {
+      exec_child(prog_in[0], prog_out[1]);
+      return 1;
+    }
     if (child == -1)
       handle_error("fork");
     guest_in = prog_in[1];
@@ -110,5 +103,6 @@ int main(int argc, char ** argv) {
   close(guest_in);
   close(guest_out);
   close(cfd);
+  return 0;
 }
 /* vim:set sw=2 ts=8 sts=2 noet: */
