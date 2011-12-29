@@ -8,21 +8,11 @@
 
 #include "plexio.h"
 #include "child.h"
+#include "io.h"
 
 void handle_error(const char * msg) {
   perror(msg);
   exit(EXIT_FAILURE);
-}
-
-int forward(int from, int to) {
-  void * buf = malloc(BUFSIZE);
-  ssize_t r = read(from, buf, BUFSIZE);
-  if (r < 0)
-    handle_error("forward read");
-  if (!r)
-    return 0;
-  write(to, buf, r);
-  return r;
 }
 
 int main() {
