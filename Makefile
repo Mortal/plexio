@@ -8,9 +8,9 @@ lines_test: lines_test.o lines.o
 clean:
 	rm -f *.o plexio lines_test list_test
 
-plexio: plexio.o child.o io.o list.o
+plexio: plexio.o child.o io.o list.o lines.o
 
-plexio.o: plexio.c plexio.h child.h io.h list.h
+plexio.o: plexio.c plexio.h child.h io.h list.h lines.h
 child.o: child.c child.h plexio.h
 io.o: io.c io.h plexio.h
 list.o: list.c list.h

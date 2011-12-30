@@ -10,6 +10,7 @@
 #include "child.h"
 #include "io.h"
 #include "list.h"
+#include "lines.h"
 
 int guest_in, guest_out;
 
@@ -62,6 +63,8 @@ int main(int argc, char ** argv) {
 
   list_insert(rfds_l, 0);
 
+  struct lines * scrollback = new_lines(30);
+
   while (restart || !eof) {
     if (eof) {
       waitpid(child, NULL, 0);
@@ -89,12 +92,27 @@ int main(int argc, char ** argv) {
     while (retval > 0) {
       if (FD_ISSET(sfd, &rfds)) {
 	int cfd = accept_command_client(sfd);
+	int j;
+	lines_for_each(j, scrollback) {
+	  char * line = scrollback->lines[j];
+	  write_one(line, strlen(line), cfd);
+	}
 	list_insert(rfds_l, cfd);
 	--retval;
       }
       if (FD_ISSET(guest_out, &rfds)) {
-	if (!forward_all(guest_out, rfds_l)) {
+	char * buf = read_and_forward_all(guest_out, rfds_l);
+	if (buf == NULL) {
 	  eof = 1;
+	}
+	int line_beginning = 0;
+	int idx = 0;
+	while (buf[idx]) {
+	  if (buf[idx] == '\n') {
+	    lines_insert(scrollback, strndup(&buf[line_beginning], idx+1-line_beginning));
+	    line_beginning = idx+1;
+	  }
+	  ++idx;
 	}
 	FD_CLR(guest_out, &rfds);
 	--retval;

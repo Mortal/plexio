@@ -21,20 +21,25 @@ ssize_t forward(int from, int to) {
   return r;
 }
 
-ssize_t forward_all(int from, struct list * to) {
-  void * buf = malloc(BUFSIZE);
-  ssize_t r = read(from, buf, BUFSIZE);
+char * read_and_forward_all(int from, struct list * to) {
+  char * buf = (char *) malloc(BUFSIZE);
+  ssize_t r = read(from, buf, BUFSIZE-1);
   if (r < 0) {
     free(buf);
     handle_error("forward read");
+    return NULL;
   }
   if (!r) {
     free(buf);
-    return 0;
+    return NULL;
   }
   write_all(buf, r, to);
-  free(buf);
-  return r;
+  buf[r] = '\0';
+  return buf;
+}
+
+void write_one(const char * buf, size_t r, int fd) {
+  write(fd, buf, r);
 }
 
 void write_all(const char * buf, size_t r, struct list * to) {
