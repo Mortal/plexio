@@ -27,6 +27,8 @@ int main() {
 
   struct list * rfds_l = new_list();
 
+  list_insert(rfds_l, 0);
+
   while (!eof) {
     fd_set rfds;
     FD_ZERO(&rfds);
@@ -65,6 +67,7 @@ int main() {
 	--retval;
 	if (!forward(fd, guest_in)) {
 	  list_find_and_remove(rfds_l, fd);
+	  close(fd);
 	  break;
 	}
 	FD_CLR(fd, &rfds);
