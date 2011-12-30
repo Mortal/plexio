@@ -19,6 +19,7 @@ void handle_error(const char * msg) {
 
 int main() {
   pid_t child = fork_child();
+  register_sigchld_handler();
 
   int sfd = listen_command_socket();
 
@@ -38,8 +39,11 @@ int main() {
       if (el > max) max = el;
     }
     int retval = select(max+1, &rfds, NULL, NULL, NULL);
-    if (retval < 0)
+    if (retval < 0) {
+      if (got_sigchld)
+	break;
       handle_error("select");
+    }
     while (retval > 0) {
       if (FD_ISSET(sfd, &rfds)) {
 	int cfd = accept_command_client(sfd);

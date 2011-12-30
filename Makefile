@@ -1,4 +1,5 @@
-CFLAGS=-g -Wall -Wextra -std=c99
+CC=gcc
+CFLAGS=-g -Wall -Wextra -std=gnu99
 all: plexio
 
 list_test: list_test.o list.o
