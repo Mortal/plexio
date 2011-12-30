@@ -1,22 +1,24 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "child.h"
 #include "plexio.h"
 
-static void exec_child(int reader, int writer);
+static void exec_child(int reader, int writer, int argc, char ** argv);
 
 pid_t child_pid;
 int got_sigchld;
 
-pid_t fork_child() {
+pid_t fork_child(int argc, char ** argv) {
   int prog_in[2];
   int prog_out[2];
   pipe(prog_in);
   pipe(prog_out);
   pid_t child = fork();
   if (!child) {
-    exec_child(prog_in[0], prog_out[1]);
+    exec_child(prog_in[0], prog_out[1], argc, argv);
     return -1;
   }
   if (child == -1)
@@ -27,11 +29,14 @@ pid_t fork_child() {
   return child;
 }
 
-/*static*/ void exec_child(int reader, int writer) {
+/*static*/ void exec_child(int reader, int writer, int argc, char ** argv) {
   dup2(reader, 0);
   dup2(writer, 1);
   dup2(writer, 2);
-  execlp("/bin/cat", "cat", NULL);
+  char ** argvp = (char **) malloc((argc+1) * sizeof(char *));
+  memcpy(argvp, argv, argc * sizeof(char *));
+  argvp[argc] = NULL;
+  execvp(argv[0], argvp);
   handle_error("exec");
 }
 

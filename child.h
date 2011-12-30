@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-pid_t fork_child();
+pid_t fork_child(int argc, char ** argv);
 void register_sigchld_handler();
 extern int got_sigchld;
 

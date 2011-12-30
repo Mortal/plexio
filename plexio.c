@@ -17,8 +17,15 @@ void handle_error(const char * msg) {
   exit(EXIT_FAILURE);
 }
 
-int main() {
-  pid_t child = fork_child();
+void parse_args(int * argc, char *** argv) {
+  --*argc;
+  ++*argv;
+}
+
+int main(int argc, char ** argv) {
+  parse_args(&argc, &argv);
+
+  pid_t child = fork_child(argc, argv);
   register_sigchld_handler();
 
   int sfd = listen_command_socket();
