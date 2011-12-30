@@ -59,7 +59,7 @@ int main() {
 	if (!FD_ISSET(fd, &rfds)) continue;
 	--retval;
 	if (!forward(fd, guest_in)) {
-	  eof = 1;
+	  list_find_and_remove(rfds_l, fd);
 	  break;
 	}
 	FD_CLR(fd, &rfds);
