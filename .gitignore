@@ -2,3 +2,4 @@ plexio
 socket
 *.o
 list_test
+lines_test
