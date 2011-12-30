@@ -1,7 +1,7 @@
 #ifndef LINES_H
 #define LINES_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 struct lines {
   int capacity;

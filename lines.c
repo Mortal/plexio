@@ -1,4 +1,5 @@
 #include "lines.h"
+#include <stdlib.h>
 
 struct lines * new_lines(size_t n) {
   struct lines * res = (struct lines *) malloc(sizeof(struct lines *));

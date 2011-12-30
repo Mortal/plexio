@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <string.h>
 #include "io.h"
 
 ssize_t forward(int from, int to) {

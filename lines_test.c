@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "lines.h"
 #include <string.h>
+#include "lines.h"
 
 int main() {
   struct lines * l = new_lines(3);
