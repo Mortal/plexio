@@ -11,6 +11,7 @@ struct list * new_list() {
 }
 
 void free_list(struct list * l) {
+  if (l->next != l) free(l->next);
   free(l);
 }
 
