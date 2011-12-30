@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 
 #include "plexio.h"
 #include "child.h"
@@ -17,7 +18,7 @@ void handle_error(const char * msg) {
 }
 
 int main() {
-  /*pid_t child =*/ fork_child();
+  pid_t child = fork_child();
 
   int sfd = listen_command_socket();
 
@@ -68,8 +69,17 @@ int main() {
   }
   close(guest_in);
   close(guest_out);
-  for_each_list(rfds_l, l_, i, fd) {
-    if (fd != -1) close(fd);
+  {
+    int status = -1;
+    waitpid(child, &status, 0);
+#define EXITMESSAGE "Program exited with code %d\n"
+    int len = 1 + snprintf(NULL, 0, EXITMESSAGE, status);
+    char *msg = (char *) malloc(len * sizeof(char));
+    snprintf(msg, len, EXITMESSAGE, status);
+    write_all(msg, len, rfds_l);
+    for_each_list(rfds_l, l_, i, fd) {
+      if (fd != -1) close(fd);
+    }
   }
   return 0;
 }

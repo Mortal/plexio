@@ -32,12 +32,16 @@ ssize_t forward_all(int from, struct list * to) {
     free(buf);
     return 0;
   }
+  write_all(buf, r, to);
+  free(buf);
+  return r;
+}
+
+void write_all(const char * buf, size_t r, struct list * to) {
   for_each_list(to, to_, i, fd) {
     if (fd == -1) continue;
     write(fd, buf, r);
   }
-  free(buf);
-  return r;
 }
 
 int listen_command_socket() {
