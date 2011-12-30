@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/select.h>
 
 #include "plexio.h"
 #include "child.h"
 #include "io.h"
+#include "list.h"
 
 int guest_in, guest_out;
 
@@ -23,13 +25,20 @@ int main() {
 
   int eof = 0;
 
+  struct list * rfds_l = new_list();
+  list_insert(rfds_l, cfd);
+  list_insert(rfds_l, guest_out);
+
   while (!eof) {
     fd_set rfds;
+    int max = 0;
     FD_ZERO(&rfds);
-    FD_SET(cfd, &rfds);
-    FD_SET(guest_out, &rfds);
-    int max = 1+((cfd > guest_out) ? cfd : guest_out);
-    int retval = select(max, &rfds, NULL, NULL, NULL);
+    for_each_list(rfds_l, l_, i, el) {
+      if (el == -1) continue;
+      FD_SET(el, &rfds);
+      if (el > max) max = el;
+    }
+    int retval = select(max+1, &rfds, NULL, NULL, NULL);
     if (retval < 0)
       handle_error("select");
     while (retval) {
