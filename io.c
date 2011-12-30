@@ -8,11 +8,35 @@
 ssize_t forward(int from, int to) {
   void * buf = malloc(BUFSIZE);
   ssize_t r = read(from, buf, BUFSIZE);
-  if (r < 0)
+  if (r < 0) {
+    free(buf);
     handle_error("forward read");
-  if (!r)
+  }
+  if (!r) {
+    free(buf);
     return 0;
+  }
   write(to, buf, r);
+  free(buf);
+  return r;
+}
+
+ssize_t forward_all(int from, struct list * to) {
+  void * buf = malloc(BUFSIZE);
+  ssize_t r = read(from, buf, BUFSIZE);
+  if (r < 0) {
+    free(buf);
+    handle_error("forward read");
+  }
+  if (!r) {
+    free(buf);
+    return 0;
+  }
+  for_each_list(to, to_, i, fd) {
+    if (fd == -1) continue;
+    write(fd, buf, r);
+  }
+  free(buf);
   return r;
 }
 

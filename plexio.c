@@ -21,18 +21,16 @@ int main() {
 
   int sfd = listen_command_socket();
 
-  int cfd = accept_command_client(sfd);
-
   int eof = 0;
 
   struct list * rfds_l = new_list();
-  list_insert(rfds_l, cfd);
-  list_insert(rfds_l, guest_out);
 
   while (!eof) {
     fd_set rfds;
-    int max = 0;
     FD_ZERO(&rfds);
+    FD_SET(sfd, &rfds);
+    FD_SET(guest_out, &rfds);
+    int max = (sfd > guest_out) ? sfd : guest_out;
     for_each_list(rfds_l, l_, i, el) {
       if (el == -1) continue;
       FD_SET(el, &rfds);
@@ -41,26 +39,38 @@ int main() {
     int retval = select(max+1, &rfds, NULL, NULL, NULL);
     if (retval < 0)
       handle_error("select");
-    while (retval) {
-      if (FD_ISSET(cfd, &rfds)) {
-	if (!forward(cfd, guest_in)) {
-	  eof = 1;
-	  break;
-	}
-	FD_CLR(cfd, &rfds);
-      } else if (FD_ISSET(guest_out, &rfds)) {
-	if (!forward(guest_out, cfd)) {
+    while (retval > 0) {
+      if (FD_ISSET(sfd, &rfds)) {
+	int cfd = accept_command_client(sfd);
+	list_insert(rfds_l, cfd);
+	--retval;
+      }
+      if (FD_ISSET(guest_out, &rfds)) {
+	if (!forward_all(guest_out, rfds_l)) {
 	  eof = 1;
 	  break;
 	}
 	FD_CLR(guest_out, &rfds);
+	--retval;
       }
-      --retval;
+      for_each_list(rfds_l, l__, j, fd) {
+	if (!retval) break;
+	if (fd == -1) continue;
+	if (!FD_ISSET(fd, &rfds)) continue;
+	--retval;
+	if (!forward(fd, guest_in)) {
+	  eof = 1;
+	  break;
+	}
+	FD_CLR(fd, &rfds);
+      }
     }
   }
   close(guest_in);
   close(guest_out);
-  close(cfd);
+  for_each_list(rfds_l, l_, i, fd) {
+    if (fd != -1) close(fd);
+  }
   return 0;
 }
 /* vim:set sw=2 ts=8 sts=2 noet: */
