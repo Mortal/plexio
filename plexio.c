@@ -52,7 +52,6 @@ static void parse_args(int * argc, char *** argv) {
       }
     } else if (!strcmp("-r", arg)) {
       restart = 1-restart;
-      printf("Restarting upon exit\n");
     } else {
       break;
     }
