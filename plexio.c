@@ -21,17 +21,36 @@ void handle_error(const char * msg) {
 
 int restart;
 char * socketpath;
+long int scrollback_size;
+char * progname;
 
-void parse_args(int * argc, char *** argv) {
-  char * progname = (*argv)[0];
+static void usage() {
+  printf("Usage: %s [-r] [-l scrollback size] <socketpath> <daemon> <daemon args>\n", progname);
+}
+
+static void parse_args(int * argc, char *** argv) {
+  progname = (*argv)[0];
   restart = 0;
   socketpath = 0;
+  scrollback_size = 30;
 
   --*argc, ++*argv;
 
   while (*argc) {
     char * arg = (*argv)[0];
-    if (!strcmp("-r", arg)) {
+    if (!strcmp("--", arg)) {
+      --*argc, ++*argv;
+      break;
+    } else if (!strcmp("-l", arg)) {
+      --*argc, ++*argv;
+      char * endptr;
+      scrollback_size = strtol((*argv)[0], &endptr, 0);
+      if ((!*(*argv)[0] || *endptr) || (scrollback_size < 0)) {
+	printf("Argument to -l must be a non-negative integer\n");
+	usage();
+	exit(1);
+      }
+    } else if (!strcmp("-r", arg)) {
       restart = 1-restart;
       printf("Restarting upon exit\n");
     } else {
@@ -41,7 +60,7 @@ void parse_args(int * argc, char *** argv) {
   }
 
   if (*argc < 2) {
-    printf("Usage: %s [-r] <socketpath> <daemon> <daemon args>\n", progname);
+    usage();
     exit(1);
   }
 
@@ -63,7 +82,7 @@ int main(int argc, char ** argv) {
 
   list_insert(rfds_l, 0);
 
-  struct lines * scrollback = new_lines(30);
+  struct lines * scrollback = scrollback_size ? new_lines(scrollback_size) : NULL;
 
   while (restart || !eof) {
     if (eof) {
@@ -93,9 +112,11 @@ int main(int argc, char ** argv) {
       if (FD_ISSET(sfd, &rfds)) {
 	int cfd = accept_command_client(sfd);
 	int j;
-	lines_for_each(j, scrollback) {
-	  char * line = scrollback->lines[j];
-	  write_one(line, strlen(line), cfd);
+	if (scrollback != NULL) {
+	  lines_for_each(j, scrollback) {
+	    char * line = scrollback->lines[j];
+	    write_one(line, strlen(line), cfd);
+	  }
 	}
 	list_insert(rfds_l, cfd);
 	--retval;
@@ -109,7 +130,8 @@ int main(int argc, char ** argv) {
 	int idx = 0;
 	while (buf[idx]) {
 	  if (buf[idx] == '\n') {
-	    lines_insert(scrollback, strndup(&buf[line_beginning], idx+1-line_beginning));
+	    if (scrollback != NULL)
+	      lines_insert(scrollback, strndup(&buf[line_beginning], idx+1-line_beginning));
 	    line_beginning = idx+1;
 	  }
 	  ++idx;
