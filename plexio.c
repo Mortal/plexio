@@ -64,6 +64,7 @@ int main(int argc, char ** argv) {
 
   while (restart || !eof) {
     if (eof) {
+      waitpid(child, NULL, 0);
       child = fork_child(argc, argv);
       eof = 0;
     }
