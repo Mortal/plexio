@@ -12,6 +12,7 @@ struct list {
 struct list * new_list();
 void free_list(struct list * l);
 void list_insert(struct list * l, int el);
+void list_find_and_remove(struct list * l, int el);
 
 #define for_each_list(list_src, list_tmp, i, element) \
   int i, element; \

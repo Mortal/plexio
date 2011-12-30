@@ -30,3 +30,12 @@ void list_insert(struct list * l, int el) {
   l_->next = tail;
   list_insert(tail, el);
 }
+
+void list_find_and_remove(struct list * l, int el) {
+  for_each_list(l, l_, i, cur) {
+    if (cur == el) {
+      l_->elements[i] = -1;
+      return;
+    }
+  }
+}
