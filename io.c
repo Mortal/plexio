@@ -53,7 +53,7 @@ int listen_command_socket() {
   struct sockaddr_un my_addr;
   memset(&my_addr, 0, sizeof(struct sockaddr_un)); /* Clear structure */
   my_addr.sun_family = AF_UNIX;
-  strncpy(my_addr.sun_path, MY_SOCK_PATH,
+  strncpy(my_addr.sun_path, socketpath,
 	  sizeof(my_addr.sun_path) - 1);
 
   if (bind(sfd, (struct sockaddr *) &my_addr,

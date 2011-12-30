@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/select.h>
 #include <sys/wait.h>
 
@@ -17,9 +18,34 @@ void handle_error(const char * msg) {
   exit(EXIT_FAILURE);
 }
 
+int restart;
+char * socketpath;
+
 void parse_args(int * argc, char *** argv) {
-  --*argc;
-  ++*argv;
+  char * progname = (*argv)[0];
+  restart = 0;
+  socketpath = 0;
+
+  --*argc, ++*argv;
+
+  while (*argc) {
+    char * arg = (*argv)[0];
+    if (!strcmp("-r", arg)) {
+      restart = 1-restart;
+      printf("Restarting upon exit\n");
+    } else {
+      break;
+    }
+    --*argc, ++*argv;
+  }
+
+  if (*argc < 2) {
+    printf("Usage: %s [-r] <socketpath> <daemon> <daemon args>\n", progname);
+    exit(1);
+  }
+
+  socketpath = (*argv)[0];
+  --*argc, ++*argv;
 }
 
 int main(int argc, char ** argv) {
@@ -36,7 +62,11 @@ int main(int argc, char ** argv) {
 
   list_insert(rfds_l, 0);
 
-  while (!eof) {
+  while (restart || !eof) {
+    if (eof) {
+      child = fork_child(argc, argv);
+      eof = 0;
+    }
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(sfd, &rfds);
@@ -49,8 +79,10 @@ int main(int argc, char ** argv) {
     }
     int retval = select(max+1, &rfds, NULL, NULL, NULL);
     if (retval < 0) {
-      if (got_sigchld)
-	break;
+      if (got_sigchld) {
+	eof = 1;
+	continue;
+      }
       handle_error("select");
     }
     while (retval > 0) {
@@ -62,7 +94,6 @@ int main(int argc, char ** argv) {
       if (FD_ISSET(guest_out, &rfds)) {
 	if (!forward_all(guest_out, rfds_l)) {
 	  eof = 1;
-	  break;
 	}
 	FD_CLR(guest_out, &rfds);
 	--retval;
