@@ -2,10 +2,12 @@
 #include <stdlib.h>
 
 struct lines * new_lines(size_t n) {
-  struct lines * res = (struct lines *) malloc(sizeof(struct lines *));
+  struct lines * res = (struct lines *) malloc(sizeof(struct lines));
   res->capacity = n;
   res->tail = 0;
+  res->elements = 0;
   res->lines = (char **) malloc(n*sizeof(char *));
+  memset(res->lines, 0, n*sizeof(char *));
   return res;
 }
 

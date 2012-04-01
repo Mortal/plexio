@@ -213,9 +213,21 @@ int main(int argc, char ** argv) {
     char *msg = (char *) malloc(len * sizeof(char));
     snprintf(msg, len, EXITMESSAGE, status);
     write_all(msg, len, rfds_l);
+    free(msg);
     for_each_list(rfds_l, l_, i, fd) {
       if (fd != -1) close(fd);
     }
+  }
+
+  free_list(rfds_l);
+
+  if (scrollback) {
+    int j;
+    lines_for_each(j, scrollback) {
+      if (scrollback->lines[j])
+	free(scrollback->lines[j]);
+    }
+    free_lines(scrollback);
   }
   return 0;
 }
