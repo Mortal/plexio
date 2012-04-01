@@ -20,6 +20,7 @@ ssize_t forward(int from, int to) {
   return r;
 }
 
+// Returns a pointer allocated with malloc(3) that should be freed with free(3).
 char * read_and_forward_all(int from, struct list * to) {
   char * buf = (char *) malloc(BUFSIZE);
   ssize_t r = read(from, buf, BUFSIZE-1);

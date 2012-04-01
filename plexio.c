@@ -180,6 +180,7 @@ int main(int argc, char ** argv) {
 	  }
 	  ++idx;
 	}
+	free(buf);
 	FD_CLR(guest_out, &rfds);
 	--retval;
       }
