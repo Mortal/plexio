@@ -32,3 +32,9 @@ This is approximately equivalent to
     tail -fn 0 minecraft.log
 
 except, of course, that you have access to the stdin of the process as well.
+
+License
+-------
+
+If you would like to use this project in a free and open source software stack,
+let me know via a message on GitHub and I will slam on the license you need.
